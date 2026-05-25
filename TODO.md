@@ -1,0 +1,3 @@
+- cron job to automagically update the profile to keep a constant commit count
+- some sort of gui for making the patterns
+- maybe more pixel shades?
