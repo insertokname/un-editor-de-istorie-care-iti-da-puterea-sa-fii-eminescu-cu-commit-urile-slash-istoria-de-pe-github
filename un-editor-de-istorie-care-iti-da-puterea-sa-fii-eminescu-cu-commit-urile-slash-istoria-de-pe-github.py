@@ -57,7 +57,42 @@ def is_git_root(path: str) -> bool:
     return os.path.isdir(os.path.join(path, ".git"))
 
 
-def get_github_user_commits(user: str) -> int:
+import requests
+
+
+import requests
+
+
+def get_authorized_github_user_commits(username: str, token: str) -> int:
+    query = """
+    query($username: String!) {
+      user(login: $username) {
+        contributionsCollection {
+          contributionCalendar {
+            totalContributions
+          }
+        }
+      }
+    }
+    """
+
+    response = requests.post(
+        "https://api.github.com/graphql",
+        json={"query": query, "variables": {"username": username}},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    if "errors" in data:
+        raise RuntimeError(data["errors"])
+
+    return data["data"]["user"]["contributionsCollection"]["contributionCalendar"][
+        "totalContributions"
+    ]
+
+
+def get_unauthorized_github_user_commits(user: str) -> int:
     class Parser(HTMLParser):
         def __init__(self):
             super().__init__()
@@ -141,6 +176,11 @@ def main():
         "--user",
         help="The username that will be used to achieve the exact number of commits targeted via the -c flag. Eg: --user insertokname",
     )
+    parser.add_argument(
+        "-t",
+        "--token",
+        help="The github api token to be used when making requests to github",
+    )
     args = parser.parse_args()
 
     if is_git_root(args.output) and not args.overwrite:
@@ -184,7 +224,12 @@ def main():
         if args.user != None:
             try:
                 print("Getting user commits...")
-                user_commits = get_github_user_commits(args.user)
+                if args.token != None:
+                    user_commits = get_authorized_github_user_commits(
+                        args.user, args.token
+                    )
+                else:
+                    user_commits = get_unauthorized_github_user_commits(args.user)
                 print(f"For user {args.user} got total commits: {user_commits}")
                 if args.total_commit_count < user_commits:
                     print(
