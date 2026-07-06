@@ -1,6 +1,5 @@
 import argparse
 from datetime import datetime, time
-from email import utils
 from html.parser import HTMLParser
 from http.cookiejar import CookieJar
 import shutil
@@ -24,6 +23,7 @@ def parse_uedicidpsfeccusidpg(filename: str) -> list[list[int]]:
             raise UEDICIDPSFECCUSIDPGFormatException(
                 f"Invalid number of lines in uedicidpsfeccusidpg file. Expected 7, got: {len(lines)}"
             )
+        lines = lines[0:7]
         out = []
         i = 1
         for line in lines:
@@ -34,7 +34,11 @@ def parse_uedicidpsfeccusidpg(filename: str) -> list[list[int]]:
                 )
 
             row = []
-            for j in list(stripped_line):
+            for j in stripped_line:
+                if not j.isdigit():
+                    raise UEDICIDPSFECCUSIDPGFormatException(
+                        f"Invalid character specified in uedicidpsfeccusidpg file.\nAll characters must be digits!\nCharacter {j} from line {stripped_line} is not a digit!"
+                    )
                 row.append(int(j))
             out.append(row)
             i += 1
@@ -215,6 +219,7 @@ def main():
     # again, 51 weeks, not the full 52
     start_last_year = start_of_week - timedelta(days=51 * 7)
 
+    print(f"adding commits from date: {start_last_year}")
     cur_day = start_last_year
     commits_dates = []
     for j in range(0, 51):
@@ -224,7 +229,7 @@ def main():
                 if extra_commits > 0:
                     extra_commits -= 1
                     add_extra_commit = 1
-                for i in range(0, commits_per_day + add_extra_commit):
+                for _ in range(0, commits_per_day + add_extra_commit):
                     commits_dates.append(datetime.combine(cur_day, time(0, 0, 0)))
             cur_day += timedelta(days=1)
 
