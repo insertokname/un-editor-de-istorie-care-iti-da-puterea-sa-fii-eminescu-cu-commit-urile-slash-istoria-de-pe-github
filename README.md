@@ -23,3 +23,46 @@ py .\un-editor-de-istorie-care-iti-da-puterea-sa-fii-eminescu-cu-commit-urile-sl
 ```
 
 If you want to delete the existing repository in the specified location use `--overwrite`.
+
+# Watcher
+
+All of this can be automated to keep a constant ammount of commits and always display the same art.
+
+You will need a classic token from [here](https://github.com/settings/tokens) with the following permissions:
+
+- all repo permisions
+- read:user
+- delete_repo
+
+Then make a new file named `.env` to set parameters for the watcher. This is an example .env file:
+
+```
+# required
+
+# Classic token needs the "repo" scope AND the "delete_repo" scope.
+GITHUB_TOKEN=xxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Your GitHub username (case-sensitive, must match exactly)
+GITHUB_USER=username
+
+# Author identity for the generated commits.
+GIT_USER_NAME=username
+GIT_USER_EMAIL=email@email.com
+
+# The total profile contribution count you want to reach/maintain.
+# Must be >= (sum of all digits in your pattern file) + 1.
+TARGET_COMMIT_COUNT=5000
+
+# optional
+
+# Path (relative to this docker-compose.yaml, i.e. inside the repo) to the
+# .uedicidpsfeccusidpg pattern file to build the image with.
+# Default: pattern.uedicidpsfeccusidpg
+PATTERN_FILE=pattern.uedicidpsfeccusidpg
+
+# Commit message used for every generated commit (default: uedicidpsfeccusidpg)
+COMMIT_MESSAGE=uedicidpsfeccusidpg
+
+# How often to update the art (in seconds, default: 1800 = 30 minutes)
+INTERVAL_SECONDS=1800
+```
