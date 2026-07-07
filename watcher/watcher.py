@@ -133,6 +133,9 @@ def main():
                     shutil.rmtree(resolved_dir, onerror=remove_readonly)
                     print(f"deleted: {resolved_dir}", flush=True)
 
+            print("waiting 15 seconds so that the deletion propagates and graphql will return an ok answer", flush=True)
+            time.sleep(15)
+
             new_name = f"github-history-art-{datetime.now(timezone.utc):%Y-%m-%d-%H-%M-%S}"
             repo_path = os.path.join("/data", new_name)
 
@@ -153,4 +156,4 @@ if __name__ == "__main__":
     try:
         main()
     except subprocess.CalledProcessError as e:
-        print(f"Got an error while running a subcommand!\nError was: {e}", flush=True)
+        print(f"!!!Got an error while running a subcommand!!!\nError was: {e}\n\n!!!This container will automatically restart!!!\n\n", flush=True)
