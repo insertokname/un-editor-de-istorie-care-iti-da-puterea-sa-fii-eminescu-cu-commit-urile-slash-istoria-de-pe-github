@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime, time
 from html.parser import HTMLParser
 from http.cookiejar import CookieJar
+import pathlib
 import shutil
 import stat
 import subprocess
@@ -129,7 +130,7 @@ def get_unauthorized_github_user_commits(user: str) -> int:
 
     p = Parser()
     p.feed(html)
-    return int(p.result.split()[0])
+    return int(p.result.split()[0].replace(",", ""))
 
 
 def main():
@@ -139,6 +140,8 @@ def main():
     )
     parser.add_argument(
         "pattern_filename",
+        nargs="?",
+        default=None,
         help=".uedicidpsfeccusidpg file containing the pattern to be drawn.",
     )
     parser.add_argument(
@@ -179,9 +182,42 @@ def main():
     parser.add_argument(
         "-t",
         "--token",
-        help="The github api token to be used when making requests to github",
+        help="The name of a file that contains the github api token to be used when making requests to github. YOU CAN ALSO JUST SET 'GITHUB_TOKEN' TO YOUR RAW TOKEN IN YOUR ENVIRONMENT!",
+    )
+    parser.add_argument(
+        "--get-commit-count",
+        help="If set, immediatly returns the commit count of the given user via the --user argument and optionally using the --token argument, exiting afterwards",
+        action="store_true",
     )
     args = parser.parse_args()
+
+    token = None
+    if os.environ.get("GITHUB_TOKEN") != None:
+        token = os.environ["GITHUB_TOKEN"]
+    if args.token != None:
+        if token != None:
+            print("Warning: --token will take precedence over GITHUB_TOKEN!")
+        token_path = pathlib.Path(args.token)
+        if not token_path.exists() or not token_path.is_file():
+            print("Error: provided token path is not valid!")
+            return
+        token = token_path.read_text()
+
+    if args.get_commit_count:
+        if args.user == None:
+            print("When using --get-commit-count --user is required")
+            return
+        if token != None:
+            print("auth")
+            user_commits = get_authorized_github_user_commits(args.user, token)
+        else:
+            user_commits = get_unauthorized_github_user_commits(args.user)
+        print(user_commits)
+        return
+
+    if args.pattern_filename == None:
+        print("A pattern_filename must be specified.")
+        return
 
     if is_git_root(args.output) and not args.overwrite:
         print(
@@ -224,10 +260,8 @@ def main():
         if args.user != None:
             try:
                 print("Getting user commits...")
-                if args.token != None:
-                    user_commits = get_authorized_github_user_commits(
-                        args.user, args.token
-                    )
+                if token != None:
+                    user_commits = get_authorized_github_user_commits(args.user, token)
                 else:
                     user_commits = get_unauthorized_github_user_commits(args.user)
                 print(f"For user {args.user} got total commits: {user_commits}")

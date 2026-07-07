@@ -1,0 +1,15 @@
+services:
+  history-art:
+    build:
+      dockerfile: Dockerfile
+      args:
+        PATTERN_FILE: ${PATTERN_FILE:-pattern.uedicidpsfeccusidpg}
+    container_name: uedicidpsfeccusidpg-watcher
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - history-art-data:/data
+
+volumes:
+  history-art-data:
